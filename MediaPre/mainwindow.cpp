@@ -1,5 +1,7 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QtWidgets>
+#include <QtWinExtras>
 
 // 若MSVC 编译版本错误，修改 msvc-version.conf 文件
 // 解决MSVC编译时，界面汉字乱码的问题
@@ -32,26 +34,22 @@ MainWindow::MainWindow(QWidget *parent) :
     //默认开始播放默认歌曲
     playlist->addMedia(QUrl::fromLocalFile("music/love.mp3"));
     playlist->addMedia(QUrl::fromLocalFile("music/All of Me.mp3"));
-//    playlist->addMedia(QUrl::fromLocalFile("music/Bang Bang.mp3"));
     playlist->addMedia(QUrl::fromLocalFile("music/G.mp3"));
-//    playlist->addMedia(QUrl::fromLocalFile("music/love.mp3"));
-//    playlist->addMedia(QUrl::fromLocalFile("music/Work For it.mp3"));
-//    playlist->addMedia(QUrl::fromLocalFile("music/Dear Jane.mp3"));
-//    playlist->addMedia(QUrl::fromLocalFile("music/Bazaar.mp3"));
 
     player->setMedia(playlist);
     //默认播放设置
     ui->listWidget->addItem("love-Alin.mp3");
     ui->listWidget->addItem("All of Me-Jane.mp3");
     ui->listWidget->addItem("G大调的悲伤-Jane.mp3");
-    ui->Namelabel->setText(QStringLiteral("love-Alin.mp3"));
+    setWindowTitle(QStringLiteral("Music Player-Love-Alin.mp3"));
     player->setVolume(30);
     ui->VolumSplider->setValue(30);
+    ui->VolumBox->setValue(30);
     playlist->setPlaybackMode(QMediaPlaylist::Loop);//设置循环模式
     player->play();
 
-    connect(player,SIGNAL(positionChanged(int)),
-            this, SLOT(onPositionChanged(int)));
+    connect(player,SIGNAL(positionChanged(qint64)),
+            this, SLOT(onPositionChanged(qint64)));
     connect(player,SIGNAL(durationChanged(qint64)),
             this, SLOT(onDurationChanged(qint64)));
     connect(playlist,SIGNAL(currentIndexChanged(int)),
@@ -80,15 +78,14 @@ void MainWindow::on_PreBtn_clicked()
 //播放
 void MainWindow::on_PlayBtn_clicked()
 {
-    numPlay++;
-    qDebug()<<numPlay<<endl;
-    if(numPlay%2==0){
+    if(player->state()==QMediaPlayer::StoppedState||player->state()==QMediaPlayer::PausedState){
         player->play();
         ui->PlayBtn->setIcon(QIcon("pause.png"));
-    }else{
+    }else if(player->state()==QMediaPlayer::PlayingState){
         ui->PlayBtn->setIcon(QIcon("play.png"));
         player->stop();
     }
+
 }
 
 //打开文件
@@ -123,10 +120,11 @@ void MainWindow::on_VolumBtn_clicked()
 
 }
 
-//音量进度条
+//音量进度条改变
 void MainWindow::on_VolumSplider_valueChanged(int value)
 {
     player->setVolume(value);
+    ui->VolumBox->setValue(value);
 }
 
 //歌曲进度条调整
@@ -160,15 +158,14 @@ void MainWindow::onPlaylistChanged(int position)
     ui->listWidget->setCurrentRow(position);
     QListWidgetItem  *item=ui->listWidget->currentItem();
     if (item){
-        ui->Namelabel->setText(item->text());
+        setWindowTitle(QStringLiteral("Music Player-")+item->text());
     }
 }
 
 //文件时长变化，更新进度显示
-void MainWindow::onDurationChanged(int duration)
+void MainWindow::onDurationChanged(qint64 duration)
 {
      ui->ScheSlider->setMaximum(duration);
-
      int   secs=duration/1000;//秒
      int   mins=secs/60; //分钟
      secs=secs % 60;//余数秒
@@ -186,7 +183,7 @@ void MainWindow::on_listWidget_doubleClicked(const QModelIndex &index)
 }
 
 //当前文件播放位置变化，更新进度显示
-void MainWindow::onPositionChanged(int position)
+void MainWindow::onPositionChanged(qint64 position)
 {
     if (ui->ScheSlider->isSliderDown())
         return;
@@ -199,3 +196,11 @@ void MainWindow::onPositionChanged(int position)
     positionTime=QString::asprintf("%d:%d",mins,secs);
     ui->PositionLabel->setText(positionTime+"/"+durationTime);
 }
+
+//音量SpiBox改变
+void MainWindow::on_VolumBox_valueChanged(int arg1)
+{
+    ui->VolumSplider->setValue(arg1);
+    player->setVolume(arg1);
+}
+

@@ -13,6 +13,16 @@
 #include <QStringList>
 #include <QStackedWidget>
 #include <QPixmap>
+#include <QtWinExtras>
+#include <QCommandLineParser>
+#include <QCommandLineOption>
+#include <QDesktopWidget>
+#include <QFileInfo>
+#include <QMimeDatabase>
+#include <QSettings>
+#include <QIcon>
+#include <QDir>
+#include <QUrl>
 
 namespace Ui {
 class MainWindow;
@@ -29,8 +39,8 @@ public:
 private slots:
     //自定义槽函数
     void onPlaylistChanged(int position);
-    void onPositionChanged(int position);
-    void onDurationChanged(int duration);
+    void onPositionChanged(qint64 position);
+    void onDurationChanged(qint64 duration);
 
     void on_NextBtn_clicked();
 
@@ -49,10 +59,11 @@ private slots:
     void on_listWidget_doubleClicked(const QModelIndex &index);
 
 
+    void on_VolumBox_valueChanged(int arg1);
+
 private:
     QMediaPlayer *player;
     QMediaPlaylist *playlist;
-    int numPlay=0;
     QString  durationTime;//总长度
     QString  positionTime;//当前播放到位置
 
